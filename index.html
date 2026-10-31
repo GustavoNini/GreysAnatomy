@@ -2,7 +2,10 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0c1f2b">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Grey's Anatomy - Streaming</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
@@ -10,13 +13,13 @@
 
     <style>
         :root {
-            --rain: #0c1f2b;        /* azul-chuva */
+            --rain: #0c1f2b;
             --rain-2: #12303f;
-            --scrub: #2f93a3;       /* azul-cirúrgico dos uniformes */
+            --scrub: #2f93a3;
             --scrub-light: #7cc4cf;
-            --paper: #eef4f4;       /* branco de papel */
+            --paper: #eef4f4;
             --ink: #14313f;
-            --pulse: #e04460;       /* batimento no monitor */
+            --pulse: #e04460;
         }
 
         body {
@@ -25,6 +28,7 @@
                 radial-gradient(1200px 500px at 50% -10%, rgba(47,147,163,.28), transparent 70%),
                 linear-gradient(180deg, var(--rain-2) 0%, var(--rain) 55%, #081720 100%);
             color: var(--paper);
+            -webkit-tap-highlight-color: transparent;
         }
 
         .serif { font-family: 'Cormorant Garamond', Georgia, serif; }
@@ -37,7 +41,6 @@
         @keyframes draw { to { stroke-dashoffset: 0; } }
         @keyframes beat { 0%,100% { opacity: 1; } 50% { opacity: .55; } }
 
-        /* Painel de controles */
         .chart {
             background: var(--paper);
             color: var(--ink);
@@ -47,6 +50,7 @@
         }
         .field {
             width: 100%;
+            min-height: 48px;
             background: #fff;
             border: 1.5px solid #c3d3d6;
             border-radius: 4px;
@@ -64,33 +68,17 @@
             font-weight: 600;
             border-radius: 4px;
             padding: .8rem 1.2rem;
+            min-height: 48px;
             transition: background .2s, transform .15s;
         }
         .btn:hover { background: #267f8d; }
         .btn:active { transform: translateY(1px); }
         .btn:focus-visible { outline: 3px solid var(--scrub-light); outline-offset: 2px; }
 
-        /* Moldura da tela do centro cirúrgico */
         .screen {
             border: 1px solid rgba(124,196,207,.2);
             box-shadow: 0 30px 60px -30px rgba(0,0,0,.8);
         }
-
-        /* Figurinha */
-        .sticker-wrap { position: fixed; right: 10px; bottom: 10px; z-index: 40; transform: rotate(6deg); }
-        .sticker-box {
-            width: 112px; height: 112px;
-            border-radius: 16px;
-            border: 2px dashed rgba(124,196,207,.6);
-            background: rgba(18,48,63,.55);
-            display: flex; align-items: center; justify-content: center;
-            overflow: hidden;
-            transition: transform .25s;
-        }
-        .sticker-box:hover { transform: scale(1.08) rotate(-4deg); }
-        .sticker-box.filled { border: none; background: transparent; }
-        .sticker-box img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 4px 6px rgba(0,0,0,.45)); }
-        @media (min-width: 768px) { .sticker-box { width: 150px; height: 150px; } }
 
         .fade-in { animation: fadeIn .5s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
@@ -160,14 +148,6 @@
         </section>
     </main>
 
-    <footer class="py-6 text-center text-sm text-[color:var(--scrub-light)]/70 border-t border-white/10">
-        <p>Criado para os fãs de Grey's Anatomy. Os vídeos são incorporados de fontes externas.</p>
-    </footer>
-
-    <div id="stickerWrap" class="sticker-wrap hidden">
-        <div class="sticker-box filled"><img id="stickerImg" alt="Figurinha"></div>
-    </div>
-
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const watchBtn = document.getElementById('watchBtn');
@@ -177,10 +157,7 @@
             const errorText = document.getElementById('errorText');
             const playerContainer = document.getElementById('playerContainer');
 
-            // TMDB ID para Grey's Anatomy
             const TMDB_ID = 1416;
-
-            // Episódios por temporada (Temporadas 1 a 22)
             const episodesPerSeason = [9, 27, 25, 17, 24, 24, 22, 24, 24, 24, 25, 24, 24, 24, 25, 21, 17, 20, 20, 10, 18, 18];
 
             episodesPerSeason.forEach((_, index) => {
@@ -242,17 +219,15 @@
                 const existingIframe = playerContainer.querySelector('iframe');
                 if (existingIframe) existingIframe.remove();
                 playerContainer.insertAdjacentHTML('beforeend', iframeHTML);
+
+                // Rolar suavemente até o player em telas menores
+                if (window.innerWidth < 768) {
+                    playerContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
             };
 
             watchBtn.addEventListener('click', loadEpisode);
 
-        
-            const STICKER_SRC = "figurinha.webp";
-
-            if (STICKER_SRC) {
-                document.getElementById('stickerImg').src = STICKER_SRC;
-                document.getElementById('stickerWrap').classList.remove('hidden');
-            }
         });
     </script>
 </body>
