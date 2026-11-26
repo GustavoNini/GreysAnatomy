@@ -145,6 +145,20 @@
                     <p class="text-[color:var(--scrub-light)] max-w-md">Escolha a temporada e o episódio e clique em Assistir.</p>
                 </div>
             </div>
+
+            <!-- Barra de troca de servidor (oculta até um episódio ser carregado) -->
+            <div id="fallbackBar" class="hidden mt-3.5 px-4 py-2.5 rounded-lg bg-[#081720]/80 border border-[rgba(124,196,207,.18)] flex flex-col sm:flex-row items-center justify-between gap-2 text-sm fade-in">
+                <p class="text-[color:var(--paper)]/90 text-center sm:text-left">
+                    Caso não pegue, 
+                    <button id="switchServerBtn" type="button" class="text-[color:var(--scrub-light)] hover:text-white underline font-semibold cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--scrub-light)] rounded px-0.5">
+                        clique aqui
+                    </button>
+                    <span class="text-[color:var(--paper)]/60">para alternar o player.</span>
+                </p>
+                <span id="serverBadge" class="text-xs font-medium px-2.5 py-1 rounded bg-[color:var(--rain-2)] text-[color:var(--scrub-light)] border border-[rgba(124,196,207,.2)]">
+                    Player 1 (Principal)
+                </span>
+            </div>
         </section>
     </main>
 
@@ -156,9 +170,50 @@
             const errorMsg = document.getElementById('errorMsg');
             const errorText = document.getElementById('errorText');
             const playerContainer = document.getElementById('playerContainer');
+            const fallbackBar = document.getElementById('fallbackBar');
+            const switchServerBtn = document.getElementById('switchServerBtn');
+            const serverBadge = document.getElementById('serverBadge');
 
             const TMDB_ID = 1416;
             const episodesPerSeason = [9, 27, 25, 17, 24, 24, 22, 24, 24, 24, 25, 24, 24, 24, 25, 21, 17, 20, 20, 10, 18, 18];
+
+            let currentSeason = null;
+            let currentEpisode = null;
+            let currentServerIndex = 0;
+
+            const servers = [
+                {
+                    label: "Player 1 (Principal)",
+                    getHTML: (season, episode) => `
+                        <iframe
+                            src="https://myembed.biz/serie/${TMDB_ID}/${season}/${episode}"
+                            width="100%"
+                            height="100%"
+                            frameborder="0"
+                            sandbox="allow-scripts allow-same-origin allow-presentation"
+                            scrolling="no"
+                            allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+                            allowfullscreen
+                            class="absolute inset-0 z-20 w-full h-full bg-black fade-in"
+                        ></iframe>
+                    `
+                },
+                {
+                    label: "Player 2 (Alternativo)",
+                    getHTML: (season, episode) => `
+                        <iframe
+                            src="https://megaembed.com/embed/${TMDB_ID}/${season}/${episode}"
+                            width="100%"
+                            height="100%"
+                            frameborder="0"
+                            scrolling="no"
+                            allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+                            allowfullscreen
+                            class="absolute inset-0 z-20 w-full h-full bg-black fade-in"
+                        ></iframe>
+                    `
+                }
+            ];
 
             episodesPerSeason.forEach((_, index) => {
                 const option = document.createElement('option');
@@ -184,6 +239,18 @@
                 }
             });
 
+            const renderIframe = () => {
+                const server = servers[currentServerIndex];
+                const iframeHTML = server.getHTML(currentSeason, currentEpisode);
+
+                const existingIframe = playerContainer.querySelector('iframe');
+                if (existingIframe) existingIframe.remove();
+                
+                playerContainer.insertAdjacentHTML('beforeend', iframeHTML);
+                serverBadge.textContent = server.label;
+                fallbackBar.classList.remove('hidden');
+            };
+
             const loadEpisode = () => {
                 const season = parseInt(seasonSelect.value, 10);
                 const episode = parseInt(episodeSelect.value, 10);
@@ -201,23 +268,12 @@
                 }
 
                 errorMsg.classList.add('hidden');
+                
+                currentSeason = season;
+                currentEpisode = episode;
+                currentServerIndex = 0; // Sempre inicia no player principal ao escolher um novo episódio
 
-                const iframeHTML = `
-                    <iframe
-                        src="https://megaembed.com/embed/${TMDB_ID}/${season}/${episode}"
-                        width="100%"
-                        height="100%"
-                        frameborder="0"
-                        scrolling="no"
-                        allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-                        allowfullscreen
-                        class="absolute inset-0 z-20 w-full h-full bg-black fade-in"
-                    ></iframe>
-                `;
-
-                const existingIframe = playerContainer.querySelector('iframe');
-                if (existingIframe) existingIframe.remove();
-                playerContainer.insertAdjacentHTML('beforeend', iframeHTML);
+                renderIframe();
 
                 // Rolar suavemente até o player em telas menores
                 if (window.innerWidth < 768) {
@@ -227,6 +283,11 @@
 
             watchBtn.addEventListener('click', loadEpisode);
 
+            switchServerBtn.addEventListener('click', () => {
+                if (currentSeason === null || currentEpisode === null) return;
+                currentServerIndex = (currentServerIndex + 1) % servers.length;
+                renderIframe();
+            });
         });
     </script>
 </body>
